@@ -1,0 +1,7 @@
+.gitignore
+
+flags = -lglfw -lGLU -lGL -lX11 -lXrandr -lm -ldl -lglpng
+
+: foreach *.c |> gcc -c %f |> %B.o
+: *.o |> gcc -o %o %f $(flags) |> game
+
