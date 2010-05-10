@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include <GL/glfw.h>
+#include <GL/glpng.h>
 
 #include "cube.ply.h"
 #include "hull.ply.h"
@@ -19,6 +20,17 @@
 
 
 bool dragging = false;
+
+
+Image imageBind(const char *fname) {
+	pngInfo info;
+	GLuint id = pngBind(fname, PNG_NOMIPMAP, PNG_ALPHA,
+			&info, GL_CLAMP, GL_NEAREST, GL_NEAREST);
+
+	Image i = { id, info.Width, info.Height };
+	return i;
+}
+
 
 // need at touch handler
 void touchMovement(int x, int y) {
@@ -75,7 +87,11 @@ int main() {
 	float delta, last;
 
 	initGame();
-	setupView();
+
+	int width, height;
+	glfwGetWindowSize(&width, &height);
+
+	setupView(width, height);
 	while (glfwGetWindowParam(GLFW_OPENED) && !glfwGetKey(GLFW_KEY_ESC)) {
 		float c = glfwGetTime();
 		delta = c - last;	

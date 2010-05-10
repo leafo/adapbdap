@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "bullet.ply.h"
 #include "ship.ply.h"
@@ -19,7 +20,7 @@ int bulletsCreated = 0;
 
 int fireBulletEvent(float dt) {
 	float xdiff = .1 - .2 * (float)(rand() % 1000) / 1000.0;
-	printf("ydiff: %f\n", xdiff);
+	// printf("ydiff: %f\n", xdiff);
 
 	pushBullet(player.pos, normalize(vec2d(xdiff,1)));
 	return 0;		
@@ -36,14 +37,14 @@ void initGame() {
 	player.pos.y = 0;
 
 	viewport.depth = -20;
-	viewport.width = 7.6;
-	viewport.height = 11.7;
+	viewport.width = 11.1;
+	viewport.height = 16.1;
 
 
 	player.bulletCount = 0; 
 	player.deadCount = 0; // dead bullets
 
-	int t = createTimer(.1, fireBulletEvent);
+	createTimer(.1, fireBulletEvent);
 }
 
 // update the game statte

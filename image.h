@@ -2,7 +2,11 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
+#ifdef IPHONE
+#include <OpenGLES/ES1/gl.h>
+#else
 #include <GL/glfw.h>
+#endif
 
 typedef struct {
 	GLuint texid;

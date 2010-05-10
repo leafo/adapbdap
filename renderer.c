@@ -1,13 +1,36 @@
 
-#include <GL/glfw.h>
-
 #include "renderer.h"
+
+#include <math.h>
+
+#ifdef IPHONE
+#include <OpenGLES/ES1/gl.h>
+#else
+#include <GL/glfw.h>
+#endif
 
 // light properties
 GLfloat ambient[] = {0.0, 0.0, 0.0, 1.0};
 GLfloat diffuse[] = {0.7, 0.7, 0.7, 1.0};
 GLfloat specular[] = {1.0, 1.0, 1.0, 1.0};
 GLfloat position[] = {0.0, 0.0, 0.0, 1.0};
+
+// set the perspective
+void perspective(float fov) {
+	float zNear = .1;
+	float zFar = 100;
+
+	float ratio =  (float)viewport.screenWidth/viewport.screenHeight;
+
+	// adapted from gluPerspective
+	float f = zNear * tanf(fov * 3.1415 / 180.0 / 2); // frustum size
+#ifdef IPHONE
+	glFrustumf(-f, f, -f/ratio, f/ratio, zNear, zFar);
+#else
+	glFrustum(-f, f, -f/ratio, f/ratio, zNear, zFar);
+#endif
+
+}
 
 void placeLights() {
 	glLightfv(GL_LIGHT0, GL_POSITION, position);
@@ -23,9 +46,7 @@ Vector2d project(Vector2d pos) {
 	return out;
 }
 
-void setupView() {
-	int width, height;	
-	glfwGetWindowSize(&width, &height);
+void setupView(int width, int height) {
 
 	glViewport(0,0, width, height);
 
@@ -59,7 +80,8 @@ void renderMesh(float *verts, float *norms, int count) {
 void view3d() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(60, (float)viewport.screenWidth/viewport.screenHeight, 0.1, 100);
+	//gluPerspective(60, (float)viewport.screenWidth/viewport.screenHeight, 0.1, 100);
+	perspective(60);
 
 	glMatrixMode(GL_MODELVIEW);
 
@@ -79,7 +101,11 @@ void view3d() {
 void view2d() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+#ifdef IPHONE
+	glOrthof(0, viewport.screenWidth, viewport.screenHeight, 0, -1, 1);
+#else
 	glOrtho(0, viewport.screenWidth, viewport.screenHeight, 0, -1, 1);
+#endif
 
 	glMatrixMode(GL_MODELVIEW);
 
@@ -98,7 +124,7 @@ void view2d() {
 void viewDebug() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluPerspective(60, (float)viewport.screenWidth/viewport.screenHeight, 0.1, 100);
+	perspective(60);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity(); // ~

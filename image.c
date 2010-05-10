@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <GL/glpng.h>
 
 #include "image.h"
 
@@ -7,19 +6,10 @@ static float quad_tex[] = {
 	0,0, 1,0, 0,1, 1,1 
 };
 
-
-// make a quad in a triangle array
-void make_quad(float *where, float left, float top, float right, float bottom) {
-}
-
+extern Image imageBind(const char *fname);
 
 Image load_image(const char *fname) {
-	pngInfo info;
-	GLuint id = pngBind(fname, PNG_NOMIPMAP, PNG_ALPHA,
-			&info, GL_CLAMP, GL_NEAREST, GL_NEAREST);
-
-	Image i = { id, info.Width, info.Height };
-	return i;
+	return imageBind(fname);
 }
 
 void draw_image(const Image i, float x, float y) {

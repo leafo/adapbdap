@@ -11,7 +11,7 @@ struct {
 	int screenWidth, screenHeight;
 } viewport;
 
-void setupView();
+void setupView(int width, int height);
 void placeLights();
 void view3d();
 void view2d();
