@@ -27,3 +27,25 @@ Vector2d scale(Vector2d v, float x) {
 	Vector2d out = { x*v.x, x*v.y };
 	return out;
 }
+
+Vector2d diff(Vector2d a, Vector2d b) {
+	return vec2d(a.x - b.x, a.y - b.y);
+}
+
+Vector2d sum(Vector2d a, Vector2d b) {
+	return vec2d(a.x + b.x, a.y + b.y);
+}
+
+
+bool pointInBox(Vector2d p, Box b) {
+	if (p.x < b.x1 || p.x > b.x2 || p.y > b.y1 || p.y < b.y2) return false; 
+	return true;
+}
+
+bool boxInBox(Box a, Box b) {
+	if (a.x2 < b.x1 || a.x1 > b.x2 || a.y2 > b.y1 || a.y1 < b.y2) return false;
+	return true;
+}
+
+
+

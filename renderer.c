@@ -1,13 +1,7 @@
 
 #include "renderer.h"
 
-#include <math.h>
-
-#ifdef IPHONE
-#include <OpenGLES/ES1/gl.h>
-#else
-#include <GL/glfw.h>
-#endif
+#include "common.h"
 
 // light properties
 GLfloat ambient[] = {0.0, 0.0, 0.0, 1.0};
@@ -66,6 +60,8 @@ void setupView(int width, int height) {
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+
+	glEnable(GL_COLOR_MATERIAL);
 }
 
 

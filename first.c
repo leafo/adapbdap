@@ -38,12 +38,12 @@ void touchMovement(int x, int y) {
 		dragging = true;
 
 		printf("start drag\n");
-		player.startx = x;
-		player.starty = y;
+		// player.dragStart = vec2d(x, y);
 	}
 	
 	Vector2d target = project(vec2d(x, y));
 
+	player.dp = diff(target, player.pos);	
 	player.pos = target;
 }
 

@@ -8,11 +8,11 @@ typedef struct {
 	float interval;
 	float passed; // time passed
 	int dead;
-	int (*action)(float);
+	int (*action)(void*);
 } Timer;
 
 void updateTimers(float dt);
-int createTimer(float i, int (*action)(float));
+int createTimer(float i, int (*action)(void *));
 int removeTimer(int tid);
 
 #endif

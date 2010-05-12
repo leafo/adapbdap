@@ -1,8 +1,7 @@
 
-#include <stdio.h>
-#include <string.h>
-
 #include "font.h"
+
+#include "common.h"
 
 #define NUM_LETTER_X 16
 #define NUM_LETTER_Y 16

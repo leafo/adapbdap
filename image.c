@@ -1,4 +1,3 @@
-#include <stdlib.h>
 
 #include "image.h"
 
@@ -29,9 +28,5 @@ void draw_image(const Image i, float x, float y) {
 
 void bind_image(const Image i) {
 	glBindTexture(GL_TEXTURE_2D, i.texid);
-}
-
-void blit_image(const Image i) {
-
 }
 
