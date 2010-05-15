@@ -31,26 +31,6 @@ Image imageBind(const char *fname) {
 	return i;
 }
 
-
-// need at touch handler
-void touchMovement(int x, int y) {
-	if (dragging == false) {
-		dragging = true;
-
-		printf("start drag\n");
-		// player.dragStart = vec2d(x, y);
-	}
-	
-	Vector2d target = project(vec2d(x, y));
-
-	player.dp = diff(target, player.pos);	
-	player.pos = target;
-}
-
-void touchAim(int x, int y) {
-
-}
-
 void gameLoop(float dt) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -98,11 +78,17 @@ int main() {
 		last = c;
 
 		// check for input
+		int mx, my;
+		glfwGetMousePos(&mx, &my);
 		if (glfwGetMouseButton(GLFW_MOUSE_BUTTON_LEFT)) {
-			int mx, my;
-			glfwGetMousePos(&mx, &my);
-			touchMovement(mx, my);
+			if (dragging == false) {
+				dragging = true;
+				moveStart(mx, my);
+			} else {
+				moveDrag(mx,my);
+			}
 		} else {
+			if (dragging) moveEnd(mx, my);
 			dragging = false;
 		}
 

@@ -9,7 +9,7 @@ float floorScale = 6;
 float floorClock = 0; // floor position
 float floorLength = 10;
 
-float scrollSpeed = 20;
+float scrollSpeed = 6;
 
 void renderFloor(float dt) {
 	floorClock += dt*scrollSpeed;

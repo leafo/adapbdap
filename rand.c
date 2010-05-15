@@ -24,6 +24,7 @@ void mt_init() {
 #define TWIST(b,i,j)    ((b)[i] & UPPER_MASK) | ((b)[j] & LOWER_MASK)
 #define MAGIC(s)        (((s)&1)*MATRIX_A)
 
+
 unsigned long mt_random() {
     unsigned long * b = mt_buffer;
     int idx = mt_index;

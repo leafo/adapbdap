@@ -25,13 +25,22 @@ struct {
 	int deadCount;
 	int dead[MAX_BULLETS];
 	int score;
+	int displayedScore;
 	double lastKill;
 } player;
+
+void moveStart(int x, int y);
+void moveDrag(int x, int y);
+void moveEnd(int x, int y);
+
+void aimStart(int x, int y);
+void aimDrag(int x, int y);
+void aimEnd(int x, int y);
+
 
 void initGame(); // initialize game data
 void updateState(float dt);
 void renderGame(float dt);
-
 
 
 void updateBullets(float dt);

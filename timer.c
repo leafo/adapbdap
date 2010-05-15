@@ -32,12 +32,14 @@ int createTimer(float interval, int (*action)(void*)) {
 	Timer t = { interval, 0, 0, action };
 	int i = timerCount;
 	if (deadTimerCount) {
-		i = deadTimers[deadTimerCount--];
+		// printf("timer from trash, i: %f at %d\n",
+		// interval, deadTimers[deadTimerCount-1]);
+		deadTimerCount--;
+		i = deadTimers[deadTimerCount];
 	} else {
+		// printf("created a timer, i: %f at %d\n", interval, i);
 		timerCount++;
 	}
-
-	printf("created a timer with i = %f\n", interval);
 
 	timers[i] = t;
 	return i; // the timer id

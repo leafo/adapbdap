@@ -19,6 +19,25 @@ float depth = -20; // the depth of the playing field
 
 int bulletsCreated = 0;
 
+
+void moveStart(int x, int y) {
+	printf("start drag\n");
+}
+
+void moveDrag(int x, int y) {
+	Vector2d target = project(vec2d(x, y));
+
+	player.dp = diff(target, player.pos);	
+	player.pos = target;
+}
+
+void moveEnd(int x, int y) {
+	printf("end drag\n");
+}
+
+
+
+
 int fireBulletEvent(void *t) {
 	float xdiff = 0;
 	// float xdiff = .05 - .1 * (float)(rand() % 1000) / 1000.0;
@@ -46,12 +65,14 @@ void initGame() {
 	viewport.width = 11.1;
 	viewport.height = 16.1;
 
+	player.score = 0;
+	player.displayedScore = 0;
 
 	player.bulletCount = 0; 
 	player.deadCount = 0; // dead bullets
 
 	createTimer(.3, fireBulletEvent);
-	pushWave(.5, 0);
+	pushWave(0);
 }
 
 // update the game statte
@@ -59,8 +80,17 @@ void updateState(float dt) {
 	updateTimers(dt);
 	updateEnemies(dt);
 	updateBullets(dt);
+	updateBombs(dt);
 
 	player.lastKill += dt;
+
+	if (player.displayedScore < player.score) {
+		int dif = player.score - player.displayedScore;
+		int up = dt*dif;
+		if (up < 1) up = 1;
+		player.displayedScore += up;
+	}
+
 }
 
 // render the game
@@ -89,8 +119,7 @@ void renderGame(float dt) {
 
 	renderBullets();
 	renderEnemies();
-
-
+	renderBombs();
 
 	viewDebug();
 	// renderEnemyHitbox();
@@ -108,7 +137,7 @@ void renderGame(float dt) {
 
 	text(font, 0,0, "score");
 	glScalef(2,2,1);
-	sprintf(status, "%d", player.score,
+	sprintf(status, "%d", player.displayedScore,
 			player.pos.x, player.pos.y);
 
 	text(font, 18, 0, status);
@@ -138,8 +167,8 @@ void pushBullet(Vector2d pos, Vector2d dir) {
 
 	bulletsCreated++;
 	player.bullets[i].dead = 0;
-	player.bullets[i].pos = sum(pos, vec2d(odd ? 1 : -.5,.5));
-	player.bullets[i].dir = vec2d(dir.x + player.dp.x/2.0, dir.y);
+	player.bullets[i].pos = sum(pos, vec2d(0,.5));
+	player.bullets[i].dir = vec2d(dir.x + player.dp.x/8.0, dir.y);
 }
 
 Box	bulletHitbox(Bullet b) {
@@ -182,8 +211,8 @@ void updateBullets(float dt) {
 		}
 		// collision handled in update enemies
 
-		bullets[b].pos.x += bullets[b].dir.x * dt * 30;
-		bullets[b].pos.y += bullets[b].dir.y * dt * 30;
+		bullets[b].pos.x += bullets[b].dir.x * dt * 40;
+		bullets[b].pos.y += bullets[b].dir.y * dt * 40;
 	}
 }
 
@@ -214,7 +243,7 @@ void onKillEnemy(int type) {
 	float mult = (1.0 - player.lastKill) * 3;
 	mult = (mult < 0 ? 0 : mult) + 1;
 	int points = mult * (type + 1);
-	printf("got points: %d\n", points);
+	points *= 19;
 	player.score += points;
 
 	player.lastKill = 0;
