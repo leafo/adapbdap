@@ -14,5 +14,6 @@ typedef struct {
 void updateTimers(float dt);
 int createTimer(float i, int (*action)(void *));
 int removeTimer(int tid);
+void clearTimers();
 
 #endif

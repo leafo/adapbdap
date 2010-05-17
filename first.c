@@ -21,6 +21,23 @@
 
 bool dragging = false;
 
+#define STORE_MAX 10
+int scoreStore[STORE_MAX];
+
+void getScores(int *scores, int count) {
+	int i;
+	for (i = 0; i < count; i++) {
+		scores[i] = scoreStore[i];
+	}
+}
+
+void saveScores(int *scores, int count) {
+	printf("writing scores to file...\n");
+	int i;
+	for (i = 0; i < count; i++) {
+		scoreStore[i] = scores[i];
+	}
+}
 
 Image imageBind(const char *fname) {
 	pngInfo info;
@@ -34,8 +51,7 @@ Image imageBind(const char *fname) {
 void gameLoop(float dt) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	updateState(dt);
-	renderGame(dt);
+	renderAll(dt);
 
 	glfwSwapBuffers();
 	glfwSleep(0.01);
@@ -57,7 +73,7 @@ int main() {
 		exit(1);
 	}
 
-	glfwSetWindowTitle("game test");
+	glfwSetWindowTitle("iphone");
 	glfwEnable(GLFW_STICKY_KEYS);
 
 	glEnable(GL_TEXTURE_2D);
@@ -66,7 +82,13 @@ int main() {
 
 	float delta, last;
 
-	initGame();
+	int i;
+	for (i = 0; i < STORE_MAX; i++) {
+		scoreStore[i] = 100*(STORE_MAX - i);
+	}
+
+
+	loadResources();
 
 	int width, height;
 	glfwGetWindowSize(&width, &height);
@@ -90,6 +112,10 @@ int main() {
 		} else {
 			if (dragging) moveEnd(mx, my);
 			dragging = false;
+		}
+
+		if (glfwGetKey(GLFW_KEY_TAB)) {
+			delta *= 2.5;
 		}
 
 		gameLoop(delta);

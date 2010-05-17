@@ -20,6 +20,9 @@ Vector2d scale(Vector2d v, float x);
 Vector2d diff(Vector2d a, Vector2d b);
 Vector2d sum(Vector2d a, Vector2d b);
 
+
+float angle(Vector2d dir);
+
 bool pointInBox(Vector2d p, Box b);
 bool boxInBox(Box a, Box b);
 

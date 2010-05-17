@@ -13,6 +13,7 @@ Image load_image(const char *fname);
 void draw_image(const Image i, float x, float y);
 
 void bind_image(const Image i);
+void image_quad();
 
 #endif
 

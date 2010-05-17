@@ -8,31 +8,141 @@
 
 #include "enemy1.ply.h"
 #include "enemy2.ply.h"
+#include "boss1.ply.h"
 #include "bomb.ply.h"
 
-#include "game.h"
+#include "animate.h"
 
 #define MAX_ENEMIES 200
+#define MAX_BOMBS 200
+
+static int waveType = 0; // current type of wave
+static int waveTicks = 0; // ticks left on wave
+
+struct {
+	int id; // the enemy id of boss sprite
+	float rate; // how fast it is firing
+	int counter;
+	int phase;
+} boss;
 
 int currentWave = 0;
 int waves[] = {
 	// 3,3,3,3, -1,
-	1,0,2,3,1,2,0,3,1,0 -1
+	1,0,2,3,1,2,0,3,1,4,0, -1
+	// 4, -1
 };
+
+EnemyType enemyTypes[];
+
+int behavior_moveDown(Enemy *e, float dt) {
+	// e->pos.x += e->dir.x * dt * 10;
+	e->pos.y += e->dir.y * dt * 10;
+
+	// shoot a bomb?
+	if (e->loaded && e->pos.y < e->release) {
+		e->loaded = false;
+		fireBombs(e->pos, enemyTypes[e->type].fireType);
+	}
+
+	return 0;
+}
+
+int behavior_boss(Enemy *e, float dt) {
+	if (e->pos.y > 9.0) {
+		e->pos.y += e->dir.y * dt * 10;
+		return 0;
+	}
+
+	// phase one		
+	e->time += dt;
+	if (e->time > boss.rate) {
+		e->time -= boss.rate;
+		switch (boss.phase) {
+			case 0: 
+				boss.phase = 1;
+				boss.counter = 0;
+				break;
+			case 1:
+				boss.rate = 0.5;
+				fireBombs(sum(e->pos, vec2d(4, 0)), SINGLE_SHOT);
+				fireBombs(sum(e->pos, vec2d(-4, 0)), SINGLE_SHOT);
+
+				boss.counter++;
+				if (boss.counter > 5) {
+					boss.counter = 0;
+					boss.phase = 2;
+					boss.rate = 0.5;
+				}
+
+				break;
+			case 2:
+				boss.rate = .1;
+				fireBombs(sum(e->pos, vec2d(1, -4)), SINGLE_SHOT);
+				fireBombs(sum(e->pos, vec2d(-1, -4)), SINGLE_SHOT);
+
+				boss.counter++;
+				if (boss.counter > 10) {
+					boss.rate = 0.5;
+					boss.phase = 4;
+					boss.counter = 0;
+				}
+
+				break;
+			case 3: 
+				boss.rate = .3;
+				if (boss.counter % 2) {
+					fireBombs(sum(e->pos, vec2d(5, 0)), WIDE_SHOT);
+				} else {
+					fireBombs(sum(e->pos, vec2d(-5, 0)), WIDE_SHOT);
+				}
+
+				boss.counter++;
+				if (boss.counter > 10) {
+					boss.rate = .5;
+					boss.phase = 0;
+					boss.counter = 0;
+				}
+				break;
+			case 4: // slow spin
+				boss.rate = .1;
+				float a = boss.counter*20*M_PI/180.0;
+				pushBomb(sum(e->pos, vec2d(0, 0)), vec2d(cos(a), sin(a)));
+				pushBomb(sum(e->pos, vec2d(0, 0)), vec2d(cos(a+M_PI), sin(a+M_PI)));
+				
+				boss.counter++;
+				if (boss.counter > 20) {
+					boss.rate = .5;
+					boss.phase = 3;
+					boss.counter = 0;
+				}
+		}
+	}
+
+	return 0;
+}
 
 
 EnemyType enemyTypes[] = {
-	{1.0, SINGLE_SHOT, .333, 0.0},
-	{1.5, SINGLE_SHOT, 1.0, 0.0},
-	{1.0, CIRCLE_SHOT, 1.0, 3.0},
+	{1.0, SINGLE_SHOT, .333, 0.0, 1, behavior_moveDown},
+	{1.5, SINGLE_SHOT, 1.0, 0.0, 1, behavior_moveDown},
+	{1.0, CIRCLE_SHOT, 1.0, 3.0, 2, behavior_moveDown},
+	{.8, BOSS_SHOT, 1.0, 3.0, 30, behavior_boss}, // the boss
 };
 
-defList(Bullet, bombs, 200);
+defList(Bullet, bombs, MAX_BOMBS);
 defList(Enemy, enemies, MAX_ENEMIES);
 float yLimit = 24;
 
-static int waveType = 0; // current type of wave
-static int waveTicks = 0; // ticks left on wave
+
+
+// get the id of the next wave
+static int nextWave() {
+	int next = waves[currentWave];
+	if (next == -1) next = waves[currentWave = 0];
+	currentWave++;
+	return next;
+}
 
 int launchEnemy(void *timer) {
 	switch(waveType) {
@@ -57,29 +167,37 @@ int launchEnemy(void *timer) {
 				pushEnemy(2, 5);
 			}
 			break;
+		case 4: // a boss
+			if (boss.id == -1) pushBoss();
+			// don't let wave end until boss is dead
+			if (enemies[boss.id].health > 0) waveTicks++;
+			break;
+
 	}
 
 	waveTicks--;	
 	if (waveTicks <= 0) {
-		int next = waves[currentWave];
-		if (next == -1) next = waves[currentWave = 0];
-		currentWave++;
-
-		pushWave(next);
+		pushWave(nextWave());
 		return true;
 	}
 
 	return false;
 }
 
-void pushEnemy(int type, float startX) {
+int pushBoss() {
+	boss.id = pushEnemy(3, 0);
+	boss.phase = 0;
+	printf("pushed boss: %d\n", boss.id);
+}
+
+int pushEnemy(int type, float startX) {
 	int eid = getFreeId(enemies);
 	if (eid >= MAX_ENEMIES) return;
 	
 	Enemy e = {0};
 	Vector2d start = {
 		startX,
-		viewport.height + 2 
+		viewport.height + 4 
 	};
 
 	e.type = type;
@@ -93,7 +211,10 @@ void pushEnemy(int type, float startX) {
 		e.release = (mt_rand() % 1000) / 1000.0 * viewport.height + t.minFirePos;
 	}
 
+	e.health = t.health;
+
 	enemies[eid] = e;
+	return eid;
 }
 
 void pushWave(int type) {
@@ -116,6 +237,11 @@ void pushWave(int type) {
 			interval = .4;
 			waveTicks = 4;
 			break;
+		case 4:
+			boss.id = -1;
+			interval = 1.0;
+			waveTicks = 1;
+			break;
 	}
 	// printf("starting wave type %d\n", type);
 	// launchEnemy(0);
@@ -124,13 +250,20 @@ void pushWave(int type) {
 
 
 void updateBombs(float dt) {
+	Box playerBox = playerHitbox();
 	int i;
 	for (i = 0; i < bombs_count; i++) {
 		if (bombs[i].dead) continue;
 
+		int dead = 0;
+		if (boxInBox(playerBox, bombHitbox(bombs[i]))) {
+			onPlayerHit();
+			dead = 1;
+		}
+
 		Vector2d p = bombs[i].pos;
 		// if outside of map, kill
-		if (p.x < -viewport.width || p.x > viewport.width ||
+		if (dead || p.x < -viewport.width || p.x > viewport.width ||
 				p.y > viewport.height || p.y < -viewport.height) {
 			bombs[i].dead = 1;
 			killId(bombs, i);
@@ -140,6 +273,15 @@ void updateBombs(float dt) {
 		// update pos
 		bombs[i].pos.x += bombs[i].dir.x * dt * 20;
 		bombs[i].pos.y += bombs[i].dir.y * dt * 20;
+	}
+}
+
+void clearBombs() {
+	int i;
+	for (i = 0; i < bombs_count; i++) {
+		if (bombs[i].dead) continue;
+		bombs[i].dead = 1;
+		killId(bombs, i);
 	}
 }
 
@@ -172,6 +314,7 @@ void renderBombs() {
 
 void updateEnemies(float dt) { // call before update bullets
 	int i;
+	Box playerBox = playerHitbox();
 	for (i = 0; i < enemies_count; i++) {
 		if (enemies[i].dead) continue;
 
@@ -184,10 +327,22 @@ void updateEnemies(float dt) { // call before update bullets
 			if (bullets[b].dead) continue;
 			if (boxInBox(bulletHitbox(bullets[b]), hitbox)) {
 				killBullet(b);
-				killed = true;
-				onKillEnemy(enemies[i].type);
+				enemies[i].health--;
+				if (enemies[i].health == 0) {
+					killed = true;
+					onKillEnemy(enemies[i].type);
+					pushAnimation(enemies[i].pos, 0);
+				}
 				break;
 			}
+		}
+		
+		// see if they hit the player
+		if (boxInBox(hitbox, playerBox)) {
+			killBullet(b);
+			killed = true;
+			pushAnimation(enemies[i].pos, 0);
+			onPlayerHit();
 		}
 
 		if (killed || enemies[i].pos.y < -yLimit) {
@@ -195,17 +350,19 @@ void updateEnemies(float dt) { // call before update bullets
 			continue;
 		}
 
-		// update pos
-		enemies[i].pos.x += enemies[i].dir.x * dt * 10;
-		enemies[i].pos.y += enemies[i].dir.y * dt * 10;
+		// update state
+		EnemyBehavior update = enemyTypes[enemies[i].type].update;
+		update(enemies+i, dt);
+	}
+}
 
-		// shoot a bomb?
-		if (enemies[i].loaded && enemies[i].pos.y < enemies[i].release) {
-			enemies[i].loaded = false;
-			
-			fireBombs(enemies[i].pos, enemyTypes[enemies[i].type].fireType);
-		}
-
+void clearEnemies() {
+	currentWave = 0;
+	boss.id = -1;
+	int i;
+	for (i = 0; i < enemies_count; i++) {
+		if (enemies[i].dead) continue;
+		killEnemy(i);
 	}
 }
 
@@ -228,19 +385,27 @@ void renderEnemies() {
 			case 2:
 				glColor4f(.949, .615, 1, 1); // red
 				break;
+			case 3:
+				glColor4f(.819, 1, .784, 1); // red
+				break;
 		}
-
-		glScalef(.7,.7,.7);
-		glRotatef(-45, 0,1,0);
 		
 		switch(enemies[i].type) {
 			case 0:
 			case 1:
+				glScalef(.7,.7,.7);
+				glRotatef(-45, 0,1,0);
 				renderMesh(enemy1_ply, enemy1_normals_ply, enemy1_ply_len/3);
 				break;
 			case 2:
+				glScalef(.7,.7,.7);
+				glRotatef(-45, 0,1,0);
 				renderMesh(enemy2_ply, enemy2_normals_ply, enemy2_ply_len/3);
 				break;
+			case 3:
+				glScalef(1.8, 1.8, 1.8);
+				renderMesh(boss1_ply, boss1_normals_ply, boss1_ply_len/3);
+
 		}
 
 
@@ -251,6 +416,17 @@ void renderEnemies() {
 }
 
 Box enemyHitbox(Enemy enemy) {
+	if (enemy.type == 3) {
+		Box out = {
+			enemy.pos.x-4.5,
+			enemy.pos.y+1,
+
+			enemy.pos.x+4.5,
+			enemy.pos.y-2.0
+		};
+		return out;
+	}
+
 	Box out = {
 		enemy.pos.x-.5,
 		enemy.pos.y+1,
@@ -261,12 +437,31 @@ Box enemyHitbox(Enemy enemy) {
 	return out;
 }
 
+Box bombHitbox(Bullet bomb) {
+	Box out = {
+		bomb.pos.x-.3,
+		bomb.pos.y+.2,
+
+		bomb.pos.x+.3,
+		bomb.pos.y-.2
+	};
+	return out;
+}
+
+
 // render the enemy hitboxes
 void renderEnemyHitbox() {
 	int i = 0;
 	for (i = 0; i < enemies_count; i++) {
 		if (enemies[i].dead) continue;
 		Box b = enemyHitbox(enemies[i]);
+		rect(b.x1, b.y1, b.x2, b.y2);
+	}
+
+
+	for (i = 0; i < bombs_count; i++) {
+		if (bombs[i].dead) continue;
+		Box b = bombHitbox(bombs[i]);
 		rect(b.x1, b.y1, b.x2, b.y2);
 	}
 }
@@ -292,18 +487,22 @@ void fireBombs(Vector2d start, int type) {
 				pushBomb(start, vec2d(cos(a), sin(a) - .5));
 			}
 			break;
-		case WIDE_SHOT:
+		case WIDE_SHOT: {
+			float spread = M_PI*50.0/180.0;
+			float a = angle(diff(player.pos, start)) - spread/2;
+
 			for (i = 0; i < wideMax; i++) {
-				float a = .25*M_PI*i/wideMax;
 				pushBomb(start, vec2d(cos(a), sin(a) - .5));
+				a += spread/wideMax;
 			}
 			break;
+		}
 	}
 }
 
 void pushBomb(Vector2d start, Vector2d dir) {
 	int bid = getFreeId(bombs);
-	if (bid >= 200) return;
+	if (bid >= MAX_BOMBS) return;
 
 	Bullet b = {0};
 	b.pos = start;

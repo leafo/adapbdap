@@ -15,6 +15,8 @@ void setupView(int width, int height);
 void placeLights();
 void view3d();
 void view2d();
+void viewSprite(); // the sprite layer
+void viewOverlay();
 void viewDebug();
 
 void rect(float x1, float y1, float x2, float y2);

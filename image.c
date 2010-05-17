@@ -25,6 +25,21 @@ void draw_image(const Image i, float x, float y) {
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 
+// draw 2x2 quad of image
+void image_quad() {
+	float pos[] = {
+		-1,-1,
+		1,-1,
+		-1,1,
+		1,1,
+	};
+
+	glVertexPointer(2, GL_FLOAT, 0, pos);	
+	glTexCoordPointer(2, GL_FLOAT, 0, quad_tex);	
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
 
 void bind_image(const Image i) {
 	glBindTexture(GL_TEXTURE_2D, i.texid);

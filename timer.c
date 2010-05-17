@@ -24,9 +24,20 @@ void updateTimers(float dt) {
 }
 
 int removeTimer(int tid) {
+	if (tid < 0) return 0;
 	timers[tid].dead = 1;
 	deadTimers[deadTimerCount++] = tid;
+	return 1;
 }
+
+void clearTimers() {
+	int i;
+	for (i = 0; i < timerCount; i++) {
+		if (timers[i].dead) continue;
+		removeTimer(i);
+	}
+}
+
 
 int createTimer(float interval, int (*action)(void*)) {
 	Timer t = { interval, 0, 0, action };

@@ -36,9 +36,16 @@ Vector2d sum(Vector2d a, Vector2d b) {
 	return vec2d(a.x + b.x, a.y + b.y);
 }
 
+// find the angle of a vector
+float angle(Vector2d dir) {
+	float a = atan(dir.y/dir.x);
+	if (dir.x < 0) a = M_PI + a;
+	return a; //*180/M_PI;
+}
 
 bool pointInBox(Vector2d p, Box b) {
-	if (p.x < b.x1 || p.x > b.x2 || p.y > b.y1 || p.y < b.y2) return false; 
+	// if (p.x < b.x1 || p.x > b.x2 || p.y > b.y1 || p.y < b.y2) return false; 
+	if (p.x < b.x1 || p.x > b.x2 || p.y < b.y1 || p.y > b.y2) return false;
 	return true;
 }
 

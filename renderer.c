@@ -117,7 +117,7 @@ void view2d() {
 
 
 // render 2d stuff in the game plane
-void viewDebug() {
+void viewSprite() {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	perspective(60);
@@ -126,13 +126,42 @@ void viewDebug() {
 	glLoadIdentity(); // ~
 	glTranslatef(0,0, -20);
 
+	glEnable(GL_TEXTURE_2D);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glDisableClientState(GL_NORMAL_ARRAY);
+}
+
+
+void viewOverlay() {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+#ifdef IPHONE
+	glOrthof(-1, 1, -1, 1, -1, 1);
+#else
+	glOrtho(-1, 1, -1, 1, -1, 1);
+#endif
+
+	glMatrixMode(GL_MODELVIEW);
+
 	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
+}
+
+
+void viewDebug() {
+	viewSprite();
+	glDisable(GL_TEXTURE_2D);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
